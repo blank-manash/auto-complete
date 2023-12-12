@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Copilot-like Autocomplete Textbox</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(to bottom, #f8f0e3, #fdf6e3);
+      /* Lighter background for elegance */
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    #editorContainer {
+      position: relative;
+      width: 100%;
+      max-width: 90%;
+      /* Increased width for a better layout */
+      margin: auto;
+      /* Centering the container */
+    }
+
+    #fullPageEditor,
+    #autocompleteText {
+      font-family: 'Playfair Display', serif;
+      /* Elegant serif font */
+      font-size: 1.25rem;
+      line-height: 1.6;
+      width: 100%;
+      padding: 15px;
+      /* Adjusted padding */
+      border-radius: 10px;
+      /* Rounded corners */
+      box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.2);
+      /* Enhanced shadow for depth */
+      /* Softer shadow */
+      box-sizing: border-box;
+    }
+
+    #fullPageEditor {
+      position: absolute;
+      z-index: 2;
+      border: 1px solid transparent;
+      background-color: #fff9f0;
+      color: #333;
+    }
+
+    #autocompleteText {
+      display: block;
+      color: grey;
+      pointer-events: none;
+      z-index: 1;
+      background-color: #fff9f0;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div id="editorContainer">
+    <pre id="autocompleteText"></pre>
+    <textarea id="fullPageEditor" rows="10" placeholder="Start composing..."></textarea>
+  </div>
+  <script>
+    const fullPageEditor = document.getElementById('fullPageEditor');
+    const autocompleteText = document.getElementById('autocompleteText');
+    let lastText = "";
+
+    fullPageEditor.addEventListener('input', function (event) {
+      lastText = event.target.value;
+    });
+
+    function fetchSuggestions(inputText) {
+      // Replace with your actual API URL
+      const apiUrl = 'https://https://daily-mailer.azurewebsites.net/suggestions';
+
+      fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text: inputText })
+      })
+        .then(response => response.json())
+        .then(data => {
+          autocompleteText.textContent = data.suggestion;
+        })
+        .catch(error => {
+          console.error('Error fetching suggestions:', error);
+        });
+    }
+
+    setInterval(() => {
+      const currentText = fullPageEditor.value;
+      if (currentText !== lastText) {
+        fetchSuggestions(currentText);
+        lastText = currentText;
+      }
+    }, 500);
+
+    fullPageEditor.addEventListener('keydown', function (event) {
+      if (event.key === 'Tab' && !event.shiftKey) {
+        event.preventDefault();
+        fullPageEditor.value += autocompleteText.textContent;
+      }
+    });
+
+  </script>
+
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+
+</html>
