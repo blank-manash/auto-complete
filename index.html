@@ -78,7 +78,7 @@
     function fetchSuggestions(inputText) {
       console.log("Fetching suggestions...");
       const domain = "daily-mailer.azurewebsites.net";
-      const apiUrl = `http://${domain}/api/suggestions`;
+      const apiUrl = `https://${domain}/api/suggestions`;
 
       fetch(apiUrl, {
         method: 'POST',
