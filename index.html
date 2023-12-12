@@ -60,6 +60,7 @@
       white-space: pre-wrap;
       overflow-wrap: break-word;
     }
+
   </style>
 
 </head>
@@ -74,37 +75,52 @@
     const autocompleteText = document.getElementById('autocompleteText');
     let lastText = "";
 
-    fullPageEditor.addEventListener('input', function (event) {
-      lastText = event.target.value;
-    });
-
     function fetchSuggestions(inputText) {
-      // Replace with your actual API URL
-      const apiUrl = 'https://https://daily-mailer.azurewebsites.net/suggestions';
+      console.log("Fetching suggestions...");
+      const domain = "daily-mailer.azurewebsites.net";
+      const apiUrl = `http://${domain}/api/suggestions`;
 
       fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ text: inputText })
+        body: JSON.stringify({text: inputText})
       })
         .then(response => response.json())
         .then(data => {
-          autocompleteText.textContent = data.suggestion;
+          const message = data.suggestion;
+          console.log("Message: ", message);
+          autocompleteText.textContent = message;
         })
         .catch(error => {
           console.error('Error fetching suggestions:', error);
         });
     }
 
-    setInterval(() => {
-      const currentText = fullPageEditor.value;
-      if (currentText !== lastText) {
-        fetchSuggestions(currentText);
-        lastText = currentText;
-      }
-    }, 500);
+    function debounce(func, wait) {
+      let timeout;
+
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    const fetchSuggestionsDebounced = debounce(function (inputText) {
+      fetchSuggestions(inputText);
+    }, 1000);
+
+    fullPageEditor.addEventListener('input', function (event) {
+      const currentText = event.target.value;
+      fetchSuggestionsDebounced(currentText);
+    });
+
 
     fullPageEditor.addEventListener('keydown', function (event) {
       if (event.key === 'Tab' && !event.shiftKey) {
